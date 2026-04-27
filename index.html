@@ -337,15 +337,21 @@ function reserveGift(id) {
     }
 }
 
-// === ФУНКЦИЯ ВИЗУАЛЬНОГО ОБНОВЛЕНИЯ ===
 function markAsTakenById(id) {
+    console.log('Попытка отметить как занятое ID:', id);
     const item = document.querySelector(`.gift-item[data-id="${id}"]`);
     if (item) {
+        console.log('Элемент найден!', item);
         item.classList.add('taken');
         const btn = item.querySelector('.btn-reserve');
         if (btn) {
             btn.innerText = "Занято";
             btn.disabled = true;
+            console.log('Кнопка обновлена');
+        }
+    } else {
+        console.error('Элемент с data-id="' + id + '" НЕ НАЙДЕН!');
+    }
         }
     }
 }
