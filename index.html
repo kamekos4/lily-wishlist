@@ -250,7 +250,7 @@ h1 {
 
 <script>
 // === НАСТРОЙКИ ===
-// ВСТАВЬ СЮДА НОВУЮ ССЫЛКУ ИЗ APPS SCRIPT (ШАГ 1)
+// ⚠️ ЗАМЕНИ ЭТУ ССЫЛКУ НА СВОЮ НОВУЮ ИЗ APPS SCRIPT (после развертывания новой версии)
 const BASE_URL = 'https://script.google.com/macros/s/AKfycbwxks9wEB_BszlhYnWNRbdUFym-Fq64hM0GVJUo6rJTsA1rucko8ECspAMWDryK5Y3u/exec';
 
 // === ТАЙМЕР ===
@@ -270,36 +270,27 @@ function updateTimer() {
 setInterval(updateTimer, 1000);
 updateTimer();
 
-// === ФУНКЦИЯ ДЛЯ ЗАГРУЗКИ ДАННЫХ (JSONP) ===
-function loadGifts() {
-    console.log('Загрузка данных через JSONP...');
-    const script = document.createElement('script');
-    // Добавляем случайное число, чтобы избежать кэша
-    script.src = BASE_URL + '?nocache=' + Math.random();
-    document.body.appendChild(script);
-}
-
-// Эта функция вызывается автоматически, когда скрипт загрузится
-// Она должна быть глобальной (window.callback)
+// === ГЛОБАЛЬНАЯ ФУНКЦИЯ CALLBACK ДЛЯ JSONP ===
 window.callback = function(data) {
-    console.log('Данные получены:', data);
-    // Проверяем, это список подарков или результат бронирования
+    console.log('Получены данные:', data);
+    
+    // Если это массив — значит, загрузился список подарков
     if (Array.isArray(data)) {
-        // Это список подарков
         data.forEach(gift => {
             if (gift.status && gift.status.toLowerCase() === 'taken') {
                 markAsTakenById(gift.id);
             }
         });
-    } else if (data.success !== undefined) {
-        // Это результат бронирования
+    } 
+    // Если это объект с success — значит, пришел ответ от бронирования
+    else if (data.success !== undefined) {
         if (data.success) {
             alert('Подарок успешно забронирован!');
-            // Перезагружаем список, чтобы обновить состояние
+            // Перезагружаем список, чтобы обновить состояние всех кнопок
             loadGifts();
         } else {
             alert('Ошибка при бронировании: ' + (data.error || 'Неизвестная ошибка'));
-            // Восстанавливаем кнопку
+            // Восстанавливаем кнопку, если она была заблокирована
             const btn = document.querySelector('.btn-reserve:not([disabled])');
             if (btn) {
                 btn.innerText = "Забронировать";
@@ -309,8 +300,13 @@ window.callback = function(data) {
     }
 };
 
-// Запускаем загрузку при старте
-document.addEventListener("DOMContentLoaded", loadGifts);
+// === ФУНКЦИЯ ЗАГРУЗКИ СПИСКА ПОДАРКОВ (JSONP) ===
+function loadGifts() {
+    console.log('Загрузка списка подарков...');
+    const script = document.createElement('script');
+    script.src = BASE_URL + '?nocache=' + Math.random(); // избегаем кэша
+    document.body.appendChild(script);
+}
 
 // === ФУНКЦИЯ БРОНИРОВАНИЯ (JSONP) ===
 function reserveGift(id) {
@@ -322,16 +318,13 @@ function reserveGift(id) {
         btn.innerText = "Обработка...";
         btn.disabled = true;
 
-        console.log('Бронирование ID:', id);
+        console.log('Отправка запроса на бронирование ID:', id);
         
-        // Создаем скрипт для отправки запроса на бронирование
         const script = document.createElement('script');
         script.src = `${BASE_URL}?action=book&id=${id}&nocache=${Math.random()}`;
         
-        // Когда скрипт загрузится, он вызовет window.callback с результатом
         script.onload = function() {
-            console.log('Запрос на бронирование отправлен');
-            // Результат обработается в window.callback
+            console.log('Запрос выполнен. Результат обработается в callback.');
         };
         
         script.onerror = function() {
@@ -344,7 +337,7 @@ function reserveGift(id) {
     }
 }
 
-// === ВИЗУАЛЬНОЕ ОБНОВЛЕНИЕ ===
+// === ФУНКЦИЯ ВИЗУАЛЬНОГО ОБНОВЛЕНИЯ ===
 function markAsTakenById(id) {
     const item = document.querySelector(`.gift-item[data-id="${id}"]`);
     if (item) {
@@ -356,6 +349,9 @@ function markAsTakenById(id) {
         }
     }
 }
+
+// Запускаем загрузку данных при старте страницы
+document.addEventListener("DOMContentLoaded", loadGifts);
 </script>
 </body>
 </html>
